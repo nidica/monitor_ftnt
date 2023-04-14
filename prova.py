@@ -1,2 +1,0 @@
-print ('ciao')
-print ('nicola')

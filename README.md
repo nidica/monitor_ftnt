@@ -10,7 +10,7 @@ Usage:
 
 `monitor_fos_sdwan.py  -i <ipaddress> -u <username> -p <password>`
 > `<ipaddress>` Firewall IP address     
-> `<username>` Firewall Admin username      
+> `<username>` Firewall Admin username (default=admin)      
 > `<password>` Firewall Admin password 
 
 
@@ -22,7 +22,7 @@ Usage:
 
 `monitor_fos_ts.py -i <ipaddress> -u <username> -p <password>`
 > `<ipaddress>` Firewall IP address     
-> `<username>` Firewall Admin username      
+> `<username>` Firewall Admin username (default=*admin*)     
 > `<password>` Firewall Admin password 
 
 ## monitor_fmg_sdwan  
@@ -31,13 +31,13 @@ Show SD-WAN members, traffic and health-chek status every 2 seconds.
 
 Usage:
 
-`monitor_fmg_sdwan.py -i <ip fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>`
+`monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>`
 > `<ipaddress>` FMG IP address     
-> `<username>` FMG Admin username      
+> `<username>` FMG Admin username (default=*admin*)      
 > `<password>` FMG Admin password         
-> `<adom>` Adom         
-> `<device>` Device name (firewall)  
-> `<vdom>` Device VDOM 
+> `<adom>` Adom (default=*root*)         
+> `<device>` Device name (firewall hostname)  
+> `<vdom>` Device VDOM (default=*root*)
 
 ## monitor_fmg_ts
 Monitoring traffic shaping of a FortiGate in realtime from Fortimanger.  
@@ -45,11 +45,11 @@ Show the class_id for each interface and its values: allocated_bandwidth, max_ba
 
 Usage:
 
-`monitor_fmg_ts.py -i <ip fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>`
+`monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>`
 > `<ipaddress>` FMG IP address     
-> `<username>` FMG Admin username      
+> `<username>` FMG Admin username (default=*admin*)      
 > `<password>` FMG Admin password         
-> `<adom>` Adom         
-> `<device>` Device name (firewall)  
-> `<vdom>` Device VDOM 
+> `<adom>` Adom (default=*root*)         
+> `<device>` Device name (firewall hostname)  
+> `<vdom>` Device VDOM (default=*root*)
 

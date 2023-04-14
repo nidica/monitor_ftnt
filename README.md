@@ -10,7 +10,7 @@ Usage:
 
 `monitor_fos_sdwan.py  -i <ipaddress> -u <username> -p <password>`
 > `<ipaddress>` Firewall IP address     
-> `<username>` Firewall Admin username (default=admin)      
+> `<username>` Firewall Admin username (default=*admin*)      
 > `<password>` Firewall Admin password 
 
 

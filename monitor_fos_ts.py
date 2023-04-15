@@ -10,9 +10,11 @@ import requests
 from ftntlib import FortiOSREST
 from tabulate import tabulate
 
+#  Parameter 
 hostname = ''
 username = 'admin'
 password = ''
+#  Variable 
 serial = ''
 version = ''
 build = ''
@@ -29,7 +31,7 @@ clr_fg_blue = '\033[1;34;40m'
 clr_reset = '\033[0m'
 
 
-if len(sys.argv) < 1:
+if len(sys.argv) < 2:
 	print ('monitor_fos_ts.py -i <ipaddress> -u <username> -p <password>')
 	sys.exit(2)
 try:
@@ -48,34 +50,9 @@ for opt, arg in opts:
 	elif opt in ('-p'):
 		password = str(arg)
 
-#print ('monitor_fos_ts.py -i' , hostname, ' -u ', username, ' -s ', password)
-#exit()
-#{
-#  "http_method":"GET",
-#  "results":[
-#	  {
-#      "interface":"OLTS_MPLS_0_0",
-#      "parent":"OLTS_MPLS_0", <-- solo tunnel
-#      "remote_gateway":"172.16.3.2", <-- solo tunnel
-#      "network_id":10, <-- solo tunnel
-#      "bandwidth":3998093,
-#      "default_class":2,
-#      "active_classes":[
-#        {
-#          "class_id":2,
-#          "class_name":"DC_HUB",
-#          "allocated_bandwidth":799618,
-#          "guaranteed_bandwidth":799618,
-#          "max_bandwidth":1999046,
-#          "current_bandwidth":1,
-#          "priority":"low",
-#          "forwarded_bytes":8100144,
-#          "dropped_packets":0,
-#          "dropped_bytes":0
-#        }]
-#	  }
-#  ]
-#  }
+if hostname == '' or password == '':
+	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
+	sys.exit()
 
 fgt = FortiOSREST()   
 try:

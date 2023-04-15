@@ -7,8 +7,6 @@ import json
 import time
 from ftntlib import FortiManagerJSON
 from tabulate import tabulate
-from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 def check(result):
     if result[0]['code'] != 0:
@@ -16,12 +14,15 @@ def check(result):
     if not result[1][0]['response']['results'] :
         raise TypeError('not results')
 
+#  Parameter 
 hostname = ''
 username = 'admin'
 password = ''
 adom = 'root'
 firewall = ''
 vdom = 'root'
+
+# Variable
 serial = ''
 version = ''
 build = ''
@@ -38,7 +39,7 @@ clr_fg_purple = '\033[1;35;40m'
 clr_fg_blue = '\033[1;34;40m'
 clr_reset = '\033[0m'
 
-if len(sys.argv) < 1:
+if len(sys.argv) < 3:
     print('monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
     exit()
 try:
@@ -62,43 +63,15 @@ for opt, arg in opts:
         firewall = str(arg)
     elif opt in ('-v'):
         vdom = str(arg)
-
-# dict_interface = {}
-# tx_value = []
+if hostname == '' or password == '' or firewall == '':
+    print('monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
+    sys.exit()
 
 fmg = FortiManagerJSON()
 try:
     # fmg.debug('on')
     fmg.login(hostname, username, password)
     while True:
-        ###########################
-        # List of statistics for multi-traffic shapers
-        # No Parameters
-        # [
-        #   {
-        #     "interface": "string",
-        #     "bandwidth": 0,
-        #     "default_class": 0,
-        #     "active_classes": [
-        #       {
-        #         "class_id": 0,
-        #         "class_name": "string",
-        #         "allocated_bandwidth": 0,
-        #         "guaranteed_bandwidth": 0,
-        #         "max_bandwidth": 0,
-        #         "current_bandwidth": 0,
-        #         "priority": "top",
-        #         "forwarded_bytes": 0,
-        #         "dropped_packets": 0,
-        #         "dropped_bytes": 0
-        #       }
-        #     ],
-        #     "parent": "string",
-        #     "remote_gateway": "string",
-        #     "network_id": 0,
-        #     "peer_id": "string"
-        #   }
-        # ]
         data = {'target': 'adom/' + adom + '/device/' + firewall,
                 'resource': "/api/v2/monitor/firewall/shaper/multi-class-shaper?vdom=" + vdom, 'action': "get"}
         url = "sys/proxy/json"

@@ -7,10 +7,6 @@ import json
 import time
 from ftntlib import FortiManagerJSON
 from tabulate import tabulate
-from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
-from itertools import count
-import random
 
 def check(result):
     if result[0]['code'] != 0:
@@ -18,12 +14,15 @@ def check(result):
     if not result[1][0]['response']['results'] :
         raise TypeError('not results')
 
+#  Parameter 
 hostname = ''
 username = 'admin'
 password = ''
 adom = 'root'
 firewall = ''
 vdom = 'root'
+
+# Variable
 serial = ''
 version = ''
 build = ''
@@ -39,17 +38,17 @@ clr_fg_purple = '\033[1;35;40m'
 clr_fg_blue = '\033[1;34;40m'
 clr_reset = '\033[0m'
 
-if len(sys.argv) < 1:
-	print ('monitor_fmg_sdwan.py -i <ip fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
+if len(sys.argv) < 3:
+	print ('monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
 	exit()
 try:
 	opts, args = getopt.getopt(sys.argv[1:],'hi:u:p:a:f:v:')
 except getopt.GetoptError:
-		print ('monitor_fmg_sdwan.py -i <ip fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
+		print ('monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
 		sys.exit(2)
 for opt, arg in opts:
 	if opt in ('-h','--help'):
-		print ('monitor_fmg_sdwan.py -i <ip fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
+		print ('monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
 		sys.exit()
 	elif opt in ('-i'):
 		hostname = arg
@@ -64,27 +63,15 @@ for opt, arg in opts:
 	elif opt in ('-v'):
 		vdom = str(arg) 
 
-# dict_interface = {}
-# tx_value = []
+if hostname == '' or password == '' or firewall == '':
+	print ('monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
+	sys.exit()
 
 fmg = FortiManagerJSON()
 try:
     # fmg.debug('on')
     fmg.login(hostname, username, password)
     while True:
-        ###########################
-        # members log firewall spoke1 - A map of interface names to their traffic statistics.
-        # No parameters
-        # "results": {
-        # "H1_ISP1": {
-        #   "link": "up",
-        #   "rx_bandwidth": 0,
-        #   "rx_bytes": 8780,
-        #   "session": 4,
-        #   "state_changed": 1671895357,
-        #   "tx_bandwidth": 1761,
-        #   "tx_bytes": 129404116
-        # }
         data = {'target': 'adom/' + adom + '/device/' + firewall,  'resource' : "/api/v2/monitor/virtual-wan/members?vdom=" + vdom, 'action': "get"}
         url = "sys/proxy/json"
         result = fmg.execute(url,data)
@@ -92,26 +79,6 @@ try:
         data_result = result[1]
         members = data_result[0]['response']
 
-        ###########################
-        # health check - A map of health check names to their statistics.
-        # No parameters
-        # "results": {
-        #     "HUB": {
-        #       "H1_ISP1": {
-        #         "jitter": 0.021067,
-        #         "latency": 0.137667,
-        #         "packet_loss": 0.0,
-        #         "packet_received": 1125086,
-        #         "packet_sent": 1125370,
-        #         "rx_bandwidth": 0,
-        #         "session": 4,
-        #         "sla_targets_met": [
-        #           1
-        #         ],
-        #         "state_changed": 1671895357,
-        #         "status": "up",
-        #         "tx_bandwidth": 1730
-        #       },
         data = {'target': 'adom/' + adom + '/device/' + firewall,  'resource' : "/api/v2/monitor/virtual-wan/health-check?vdom=" + vdom, 'action': "get"}
         url = "sys/proxy/json"
         result = fmg.execute(url,data)
@@ -124,9 +91,6 @@ try:
         version = members['version']
         build = members['build']
 
-        # # print(result)
-        # print ("Type of result --> ", type(result[1]))
-        # print ('Len result -->', len(result))
         os.system('clear')
         table = []
         print ('%sTime : %s\033[0m  %sDevice: %s (%s) Version %s build%s\n' % (clr_bg_red, time.ctime(), clr_bg_yellow, firewall, serial, version, build))

@@ -8,9 +8,11 @@ import time
 import requests
 from tabulate import tabulate
 
+#  Parameter 
 hostname = ''
 username = 'admin'
 password = ''
+#  Variable 
 serial = ''
 version = ''
 build = ''
@@ -30,7 +32,7 @@ clr_fg_blue = '\033[1;34;40m'
 clr_reset = '\033[0m'
 
 
-if len(sys.argv) < 1:
+if len(sys.argv) < 2:
 	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
 	sys.exit(2)
 try:
@@ -48,6 +50,10 @@ for opt, arg in opts:
 		username = arg
 	elif opt in ('-p'):
 		password = str(arg)
+
+if hostname == '' or password == '':
+	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
+	sys.exit()
 
 fgt = FortiOSREST()    
 try:

@@ -26,7 +26,7 @@ Usage:
 > `<password>` Firewall Admin password 
 
 ## monitor_fmg_sdwan  
-Monitoring parameter SD-WAN of a FortiGate in realtime from Fortimanger.   
+Monitoring parameter SD-WAN of a FortiGate in realtime from FortiManger.   
 Show SD-WAN members, traffic and health-chek status every 2 seconds.  
 
 Usage:
@@ -40,7 +40,7 @@ Usage:
 > `<vdom>` Device VDOM (default=*root*)
 
 ## monitor_fmg_ts
-Monitoring traffic shaping of a FortiGate in realtime from Fortimanger.  
+Monitoring traffic shaping of a FortiGate in realtime from FortiManger.  
 Show the class_id for each interface and its values: allocated_bandwidth, max_bandwidth, guaranteed_bandwidth, priority, current_bandwidth, drop_bytes, forwarded_bytes.  
 
 Usage:
@@ -52,4 +52,14 @@ Usage:
 > `<adom>` Adom (default=*root*)         
 > `<device>` Device name (firewall hostname)  
 > `<vdom>` Device VDOM (default=*root*)
+
+## Prerequisities  
+- Python 3.9.6+ with this packages:
+    - requests (https://pypi.org/project/setuptools/)
+    - lxml (https://pypi.org/project/lxml/)
+    - setuptools (https://pypi.org/project/setuptools/)
+    - suds (https://pypi.org/project/suds/)
+    - tabulate (https://pypi.org/project/tabulate/)
+- FTNTLIB Python Module 0.4.0.dev18 (https://fndn.fortinet.net/index.php?/tools/file/4-ftntlib-python-module/)
+
 

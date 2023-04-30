@@ -8,8 +8,12 @@ import time
 import requests
 from tabulate import tabulate
 
+def check(data):
+    if not data['results'] :
+        raise TypeError('No results')
+    
 #  Parameter 
-hostname = ''
+ipfirewall = ''
 username = 'admin'
 password = ''
 #  Variable 
@@ -45,22 +49,39 @@ for opt, arg in opts:
 		print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
 		sys.exit()
 	elif opt in ('-i'):
-		hostname = arg
+		ipfirewall = arg
 	elif opt in ('-u'):
 		username = arg
 	elif opt in ('-p'):
 		password = str(arg)
 
-if hostname == '' or password == '':
+if ipfirewall == '' or password == '':
 	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
 	sys.exit()
 
 fgt = FortiOSREST()    
 try:
 	#fgt.debug('on')    
-	fgt.login(hostname, username, password)
+	fgt.login(ipfirewall, username, password)
+
+	# "results": {
+    #     "model_name": "FortiGate",
+    #     "model_number": "VM64-KVM",
+    #     "model": "FGVMK6",
+    #     "hostname": "site1-1",
+    #     "log_disk_status": "available"
+    # },
+	sys_status = fgt.get('monitor', 'system', 'status')
+	status = json.loads(sys_status)
+	check(status)
+	hostname = status['results']['hostname']
+	model = status['results']['model']
+	model_number = status['results']['model_number']
+	model_name = status['results']['model_name']
+
 	cmdb_sdwan = fgt.get('cmdb', 'system', 'sdwan')
 	sdwan = json.loads(cmdb_sdwan)
+	check(sdwan)
 	if sdwan['results']['status'] == 'disable':
 		raise TypeError('SD-WAN disable')
 
@@ -88,8 +109,10 @@ try:
 	while True:  
 		data = fgt.get('monitor', 'virtual-wan', 'members')
 		members = json.loads(data)
+		check(members)
 		data1 = fgt.get('monitor', 'virtual-wan', 'health-check')
 		members1 = json.loads(data1)
+		check(members1)
 
 		serial = members['serial']
 		version = members['version']
@@ -97,7 +120,7 @@ try:
 		os.system('clear')
 		table = []
 		table_members =[]
-		print ('%sTime : %s\033[0m  %sHostname: %s (%s) Version %s build%s\n' % (clr_bg_red, time.ctime(), clr_bg_yellow, hostname, serial, version, build))
+		print ('%sTime : %s\033[0m  %sHostname: %s (%s) IP: %s Version %s build%s\n' % (clr_bg_red, time.ctime(), clr_bg_yellow, hostname, serial, ipfirewall, version, build))
 		print (clr_bg_yellow + "SD-WAN members")
 		headers_member = [clr_fg_blue + 'name', 'seq', 'zone', 'gateway', 'source', 'cost', 'weight', 'priority']
 		for members_sdwan in zone_sdwan.keys():
@@ -227,16 +250,16 @@ except TypeError as identifier:
     print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
     
 except KeyboardInterrupt:
-	print ('%sMonitor sd-wan to %s terminated%s' % (clr_bg_red, hostname, clr_reset))
+	print ('%sMonitor sd-wan to %s terminated%s' % (clr_bg_red, ipfirewall, clr_reset))
 
 except KeyError:
 	print ('%sInvalid data format %s' % (clr_bg_red, clr_reset))
 	
 except json.decoder.JSONDecodeError: 
-	print ('%sLogin failed to %s%s' % (clr_bg_red, hostname, clr_reset))
+	print ('%sLogin failed to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
 
 except (requests.exceptions.ConnectionError, OSError):
-	print('%sFailed to establish a connection to %s%s' % (clr_bg_red, hostname, clr_reset))
+	print('%sFailed to establish a connection to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
 
 finally:
 	#print 'Finally close client'

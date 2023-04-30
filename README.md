@@ -1,18 +1,33 @@
 # Monitor_ftnt 
-#### v1.0.0 (April, 14, 2023)
 #### Script Python for Fortinet device monitoring
 
+## **Install the Python scripts**
+To install the scripts in your machine, follow one of two way.
+### 1) Git command
+Run the following commands in your shell to install the scripts from GitHub:
+```console
+$ git clone https://github.com/nidica/monitor_ftnt.git
+$ cd monitor_ftnt
+```
+### 2) Download the package 
+ Downaload the file (*.zip* or *.tar.gz*) in [latest release](https://github.com/nidica/monitor_ftnt/releases) from GitHub.  
+ Extract the files in a directory and run the scripts.  
+
+## **Usage**
 ## monitor_fos_sdwan
 Monitoring parameter SD-WAN of a FortiGate in realtime.  
 Show SD-WAN members, traffic and health-chek status every 2 seconds.
 
 Usage:
 
-`monitor_fos_sdwan.py  -i <ipaddress> -u <username> -p <password>`
+```console
+./monitor_fos_sdwan.py  -i <ipaddress> -u <username> -p <password>
+```
 > `<ipaddress>` Firewall IP address     
 > `<username>` Firewall Admin username (default=*admin*)      
 > `<password>` Firewall Admin password 
 
+![monitor_fos_sdwan](/image/monitor_fos_sdwan.png "monitor_fos_sdwan")
 
 ## monitor_fos_ts  
 Monitoring traffic shaping of a FortiGate in realtime.  
@@ -20,10 +35,15 @@ Show the class_id for each interface and its values: allocated_bandwidth, max_ba
 
 Usage:
 
-`monitor_fos_ts.py -i <ipaddress> -u <username> -p <password>`
+```console
+./monitor_fos_ts.py -i <ipaddress> -u <username> -p <password>
+```  
 > `<ipaddress>` Firewall IP address     
 > `<username>` Firewall Admin username (default=*admin*)     
 > `<password>` Firewall Admin password 
+
+![monitor_fos_ts](/image/monitor_fos_ts.png "monitor_fos_ts")
+
 
 ## monitor_fmg_sdwan  
 Monitoring parameter SD-WAN of a FortiGate in realtime from FortiManger.   
@@ -31,7 +51,9 @@ Show SD-WAN members, traffic and health-chek status every 2 seconds.
 
 Usage:
 
-`monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>`
+```console
+./monitor_fmg_sdwan.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>  
+```
 > `<ipaddress>` FMG IP address     
 > `<username>` FMG Admin username (default=*admin*)      
 > `<password>` FMG Admin password         
@@ -45,7 +67,9 @@ Show the class_id for each interface and its values: allocated_bandwidth, max_ba
 
 Usage:
 
-`monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>`
+```console
+./monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>
+```
 > `<ipaddress>` FMG IP address     
 > `<username>` FMG Admin username (default=*admin*)      
 > `<password>` FMG Admin password         
@@ -53,7 +77,7 @@ Usage:
 > `<device>` Device name (firewall hostname)  
 > `<vdom>` Device VDOM (default=*root*)
 
-## Prerequisities  
+## **Pre-requisites**  
 - Python 3.9.6+ with this packages:
     - requests (https://pypi.org/project/setuptools/)
     - lxml (https://pypi.org/project/lxml/)
@@ -62,4 +86,8 @@ Usage:
     - tabulate (https://pypi.org/project/tabulate/)
 - FTNTLIB Python Module 0.4.0.dev18 (https://fndn.fortinet.net/index.php?/tools/file/4-ftntlib-python-module/)
 
+Notice: all the scripts use the python3 interpeter in */usr/bin/* directory. Please, change the path if your python3 is in other one.
 
+## **Run scripts in Docker container**
+Another way to run the scripts is to download a docker image in your machine.  
+[Download](https://hub.docker.com/r/ndicaprio/mnt_ftnt) the image from docker hub and follow the instructions.

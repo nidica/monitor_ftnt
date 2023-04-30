@@ -10,8 +10,12 @@ import requests
 from ftntlib import FortiOSREST
 from tabulate import tabulate
 
+def check(data):
+    if not data['results'] :
+        raise TypeError('No results')
+    
 #  Parameter 
-hostname = ''
+ipfirewall = ''
 username = 'admin'
 password = ''
 #  Variable 
@@ -44,29 +48,37 @@ for opt, arg in opts:
 		print ('monitor_fos_ts.py -i <ipaddress> -u <username> -p <password>')
 		sys.exit()
 	elif opt in ('-i'):
-		hostname = arg
+		ipfirewall = arg
 	elif opt in ('-u'):
 		username = arg
 	elif opt in ('-p'):
 		password = str(arg)
 
-if hostname == '' or password == '':
+if ipfirewall == '' or password == '':
 	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
 	sys.exit()
 
 fgt = FortiOSREST()   
 try:
 	#fgt.debug('on')    
-	fgt.login(hostname, username, password)
+	fgt.login(ipfirewall, username, password)
+	sys_status = fgt.get('monitor', 'system', 'status')
+	status = json.loads(sys_status)
+	check(status)
+	hostname = status['results']['hostname']
+	model = status['results']['model']
+	model_number = status['results']['model_number']
+	model_name = status['results']['model_name']
 	
 	while True:  
 		data = fgt.get('monitor', 'firewall', 'shaper', 'multi-class-shaper')
 		shaper = json.loads(data)
+		check(shaper)
 		serial = shaper['serial']
 		version = shaper['version']
 		build = shaper['build']
 		os.system('clear')
-		print ('%sTime : %s\033[0m  %sHostname: %s (%s) Version %s build%s' % (clr_bg_red, time.ctime(), clr_bg_yellow, hostname, serial, version, build))
+		print ('%sTime : %s\033[0m  %sHostname: %s (%s) IP: %s Version %s build%s' % (clr_bg_red, time.ctime(), clr_bg_yellow, hostname , serial, ipfirewall, version, build))
 		for results in shaper['results']:
 			interface = results['interface']
 			bandwidth = results['bandwidth']
@@ -102,14 +114,17 @@ try:
 
 		time.sleep(2)
 
+except TypeError as identifier:
+    print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
+    
 except KeyboardInterrupt:
 	print ('%sInterrupt by user %s' % (clr_bg_yellow, clr_reset))
 	
 except json.decoder.JSONDecodeError: 
-	print ('%sLogin failed to %s' % (clr_bg_red, hostname))
+	print ('%sLogin failed to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
 
 except (requests.exceptions.ConnectionError, OSError):
-	print ('%sFailed to establish a connection to %s' % (clr_bg_red, hostname))
+	print ('%sFailed to establish a connection to %s' % (clr_bg_red, ipfirewall))
 
 finally:
 	fgt.logout()

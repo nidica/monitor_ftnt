@@ -5,17 +5,26 @@ import requests
 import sys
 import json
 import time
-from ftntlib import FortiManagerJSON
+from pyFMG import fortimgr
 from tabulate import tabulate
 
 def check(result):
-    if result[0]['code'] != 0:
-        raise TypeError(result[0]['message'] + ' (code='+ str(result[0]['code'])+')' )
-    if not result[1][0]['response']['results'] :
-        raise TypeError('not results')
+    if result[0] != 0:
+        raise TypeError('Status Code=' + str(result[1]['status']['code']) + '  Message=' + str(result[1]['status']['message']))
+    
+    if result[1][0]['status']['code'] !=0 :
+        raise TypeError('Status Code=' + str(result[1][0]['status']['code']) + '  Message=' + str(result[1][0]['status']['message']))
 
+    if 'response' in  result[1][0]:
+         if not result[1][0]['response']['results'] :
+            raise TypeError('No results from the request')
+
+def check_get(result):
+    if result[0] != 0:
+        raise TypeError('Status Code=' + str(result[1]['status']['code']) + '  Message=' + str(result[1]['status']['message']))
+    
 #  Parameter 
-hostname = ''
+ip_fmg = ''
 username = 'admin'
 password = ''
 adom = 'root'
@@ -52,7 +61,7 @@ for opt, arg in opts:
         print('monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
         sys.exit()
     elif opt in ('-i'):
-        hostname = arg
+        ip_fmg = arg
     elif opt in ('-u'):
         username = arg
     elif opt in ('-p'):
@@ -63,19 +72,23 @@ for opt, arg in opts:
         firewall = str(arg)
     elif opt in ('-v'):
         vdom = str(arg)
-if hostname == '' or password == '' or firewall == '':
+if ip_fmg == '' or password == '' or firewall == '':
     print('monitor_fmg_ts.py -i <ip_fmg> -u <username> -p <password> -a <adom> -f <device> -v <vdom>')
     sys.exit()
 
-fmg = FortiManagerJSON()
+fmg = fortimgr.FortiManager(ip_fmg, username, password, debug=False, disable_request_warnings=True)
 try:
-    # fmg.debug('on')
-    fmg.login(hostname, username, password)
+    fmg.login()
+    url = 'dvmdb/adom/{0}/device/{1}'.format(adom, firewall)
+    device = fmg.get(url)
+    check_get(device)
+    ip_firewall = device[1]['ip']
+
     while True:
         data = {'target': 'adom/' + adom + '/device/' + firewall,
                 'resource': "/api/v2/monitor/firewall/shaper/multi-class-shaper?vdom=" + vdom, 'action': "get"}
         url = "sys/proxy/json"
-        result = fmg.execute(url, data)
+        result = fmg.execute(url, data =data)
         check(result)
         data_result = result[1]
         shaper = data_result[0]['response']
@@ -84,9 +97,9 @@ try:
         version = shaper['version']
         build = shaper['build']
         os.system('clear')
-        print('%sTime : %s\033[0m  %sDevice: %s (%s) Version %s build%s\n' % (
-            clr_bg_red, time.ctime(), clr_bg_yellow, firewall, serial, version, build))
-
+        print('%sTime : %s\033[0m  %sDevice: %s (%s) IP: %s Version %s build%s\n' % (
+            clr_bg_red, time.ctime(), clr_bg_yellow, firewall, serial, ip_firewall, version, build))
+        
         for classes in shaper['results']:
             interface = classes['interface']
             bandwidth = classes['bandwidth']
@@ -121,28 +134,31 @@ try:
                 clr_fg_purple + str(active_classes['forwarded_bytes'])
                 ])
             print(tabulate(table, headers, numalign="right"))
-        
+
         time.sleep(2)
 
-    # fmg.debug('off')
+except fortimgr.FMGValidSessionException as identifier:
+    print ('%sValid Session Exception: FortiManager instance that had no valid session or was not connected.%s' % (clr_bg_red, clr_reset))
+
+except fortimgr.FMGBaseException as identifier:
+	print ('%sBase Exception: %s%s' % (clr_bg_red, identifier, clr_reset))
+
+except fortimgr.FMGConnectTimeout as identifier:
+	print ('%sConnect Timeout: %s%s' % (clr_bg_red, identifier, clr_reset))
 
 except TypeError as identifier:
     print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
-
-except KeyError as identifier:
-    print('%sInvalid data format%s' % (clr_bg_red, clr_reset))
-
+    
 except KeyboardInterrupt:
-    print('%sInterrupt by user %s' % (clr_bg_yellow, clr_reset))
+	print ('%sInterrupt by user %s' % (clr_bg_yellow, clr_reset))
+	
+except json.decoder.JSONDecodeError: 
+	print ('%sLogin failed to %s%s' % (clr_bg_red, ip_fmg, clr_reset))
 
 except (requests.exceptions.ConnectionError, OSError):
-    print('%sFailed to establish a connection to %s%s' %
-          (clr_bg_red, hostname, clr_reset))
-
-except json.decoder.JSONDecodeError:
-    print('%sLogin failed to %s%s' % (clr_bg_red, hostname, clr_reset))
+	print ('%sFailed to establish a connection to %s%s' % (clr_bg_red, ip_fmg, clr_reset))
+	
 
 finally:
     fmg.logout()
-    # fmg.debug('off')
     print("Exit")

@@ -1,18 +1,18 @@
 #!/usr/bin/python3
 import getopt
-import json
 import os
 import string
 import sys
 import time
-
 import requests
-from ftntlib import FortiOSREST
+from pyFGT import fortigate
 from tabulate import tabulate
 
 def check(data):
-    if not data['results'] :
-        raise TypeError('No results')
+    if data[1]['status'] != 'success':
+        raise TypeError('Status error from the request')
+    if not data[1]['results'] :
+        raise TypeError('No results from the request')
     
 #  Parameter 
 ipfirewall = ''
@@ -58,28 +58,26 @@ if ipfirewall == '' or password == '':
 	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
 	sys.exit()
 
-fgt = FortiOSREST()   
+fgt_istance = fortigate.FortiGate(ipfirewall, username, password, debug=False, disable_request_warnings=True)
+
 try:
-	#fgt.debug('on')    
-	fgt.login(ipfirewall, username, password)
-	sys_status = fgt.get('monitor', 'system', 'status')
-	status = json.loads(sys_status)
+	fgt_istance.login()
+	status = fgt_istance.get('/monitor/system/status')
 	check(status)
-	hostname = status['results']['hostname']
-	model = status['results']['model']
-	model_number = status['results']['model_number']
-	model_name = status['results']['model_name']
-	
+	hostname = status[1]['results']['hostname']
+	model = status[1]['results']['model']
+	model_number = status[1]['results']['model_number']
+	model_name = status[1]['results']['model_name']
+		
 	while True:  
-		data = fgt.get('monitor', 'firewall', 'shaper', 'multi-class-shaper')
-		shaper = json.loads(data)
+		shaper = fgt_istance.get('/monitor/firewall/shaper/multi-class-shaper')
 		check(shaper)
-		serial = shaper['serial']
-		version = shaper['version']
-		build = shaper['build']
+		serial = shaper[1]['serial']
+		version = shaper[1]['version']
+		build = shaper[1]['build']
 		os.system('clear')
 		print ('%sTime : %s\033[0m  %sHostname: %s (%s) IP: %s Version %s build%s' % (clr_bg_red, time.ctime(), clr_bg_yellow, hostname , serial, ipfirewall, version, build))
-		for results in shaper['results']:
+		for results in shaper[1]['results']:
 			interface = results['interface']
 			bandwidth = results['bandwidth']
 			default_class = results['default_class']
@@ -113,6 +111,13 @@ try:
 			print(tabulate(table, headers, numalign="right"))
 
 		time.sleep(2)
+		# fgt_istance.logout()
+
+except fortigate.FGTValidSessionException as identifier:
+    print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
+
+except fortigate.FGTBaseException as identifier:
+	print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
 
 except TypeError as identifier:
     print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
@@ -120,14 +125,11 @@ except TypeError as identifier:
 except KeyboardInterrupt:
 	print ('%sInterrupt by user %s' % (clr_bg_yellow, clr_reset))
 	
-except json.decoder.JSONDecodeError: 
-	print ('%sLogin failed to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
-
 except (requests.exceptions.ConnectionError, OSError):
-	print ('%sFailed to establish a connection to %s' % (clr_bg_red, ipfirewall))
+	print ('%sFailed to establish a connection to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
 
 finally:
-	fgt.logout()
+	# fgt_istance.logout()
 	print("Exit")
 	
 	

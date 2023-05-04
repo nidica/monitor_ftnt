@@ -2,15 +2,16 @@
 import os
 import sys
 import getopt
-import json
-from ftntlib import FortiOSREST
 import time
 import requests
+from pyFGT import fortigate
 from tabulate import tabulate
 
 def check(data):
-    if not data['results'] :
-        raise TypeError('No results')
+    if data[1]['status'] != 'success':
+        raise TypeError('Status error from the request')
+    if not data[1]['results'] :
+        raise TypeError('No results from the request')
     
 #  Parameter 
 ipfirewall = ''
@@ -59,34 +60,24 @@ if ipfirewall == '' or password == '':
 	print ('monitor_fos_sdwan.py -i <ipaddress> -u <username> -p <password>')
 	sys.exit()
 
-fgt = FortiOSREST()    
+fgt_istance = fortigate.FortiGate(ipfirewall, username, password, debug=False, disable_request_warnings=True)
+
 try:
-	#fgt.debug('on')    
-	fgt.login(ipfirewall, username, password)
-
-	# "results": {
-    #     "model_name": "FortiGate",
-    #     "model_number": "VM64-KVM",
-    #     "model": "FGVMK6",
-    #     "hostname": "site1-1",
-    #     "log_disk_status": "available"
-    # },
-	sys_status = fgt.get('monitor', 'system', 'status')
-	status = json.loads(sys_status)
+	fgt_istance.login()
+	status = fgt_istance.get('/monitor/system/status')
 	check(status)
-	hostname = status['results']['hostname']
-	model = status['results']['model']
-	model_number = status['results']['model_number']
-	model_name = status['results']['model_name']
+	hostname = status[1]['results']['hostname']
+	model = status[1]['results']['model']
+	model_number = status[1]['results']['model_number']
+	model_name = status[1]['results']['model_name']
 
-	cmdb_sdwan = fgt.get('cmdb', 'system', 'sdwan')
-	sdwan = json.loads(cmdb_sdwan)
+	sdwan = fgt_istance.get('/cmdb/system/sdwan')
 	check(sdwan)
-	if sdwan['results']['status'] == 'disable':
+	if sdwan[1]['results']['status'] == 'disable':
 		raise TypeError('SD-WAN disable')
 
 	zone_sdwan = {}
-	for members in sdwan['results']['members']:
+	for members in sdwan[1]['results']['members']:
 		zone_sdwan[members['interface']] = {
 			'seq-num': members['seq-num'],
 			"zone": members['zone'],
@@ -97,7 +88,7 @@ try:
             "priority": members['priority']
 			}
 	health_check = {}
-	for hc in sdwan['results']['health-check']:
+	for hc in sdwan[1]['results']['health-check']:
 		health_check[hc['name']] = {
 			'server': hc['server'],
 			'protocol': hc['protocol'],
@@ -105,18 +96,15 @@ try:
 			'sla': hc['sla']
 		}
 
-	# raise TypeError('exit')
 	while True:  
-		data = fgt.get('monitor', 'virtual-wan', 'members')
-		members = json.loads(data)
+		members = fgt_istance.get('/monitor/virtual-wan/members')
 		check(members)
-		data1 = fgt.get('monitor', 'virtual-wan', 'health-check')
-		members1 = json.loads(data1)
+		members1 = fgt_istance.get('/monitor/virtual-wan/health-check')
 		check(members1)
 
-		serial = members['serial']
-		version = members['version']
-		build = members['build']
+		serial = members[1]['serial']
+		version = members[1]['version']
+		build = members[1]['build']
 		os.system('clear')
 		table = []
 		table_members =[]
@@ -137,43 +125,43 @@ try:
 		print(tabulate(table_members, headers_member, numalign="right"))	
 		
 		print (clr_bg_yellow + "\nSD-WAN traffic")
-		# headers = [clr_fg_blue + 'name', 'link', 'session', 'tx_bandwidth(bps)', 'rx_bandwidth(bps)', 'tx_bytes', 'rx_bytes']
+		
 		headers = [clr_fg_blue + 'name', 'link', 'session', 'tx_bandwidth(bps)', 'rx_bandwidth(bps)', 'tx_bytes', 'rx_bytes']
-		for interface in members['results'].keys():
-			if members['results'][interface]['link'] != "down":
+		for interface in members[1]['results'].keys():
+			if members[1]['results'][interface]['link'] != "down":
 				color_l = clr_fg_green
 			else:
 				color_l = clr_fg_red
 
 			table.append([
                 clr_fg_yellow + interface,
-                color_l + members['results'][interface]['link'],
-                clr_fg_white + str(members['results'][interface]['session']),
-                clr_fg_white + str(members['results'][interface]['tx_bandwidth']),
-                clr_fg_white + str(members['results'][interface]['rx_bandwidth']),
-                clr_fg_white + str(members['results'][interface]['tx_bytes']),
-                clr_fg_white + str(members['results'][interface]['rx_bytes'])
+                color_l + members[1]['results'][interface]['link'],
+                clr_fg_white + str(members[1]['results'][interface]['session']),
+                clr_fg_white + str(members[1]['results'][interface]['tx_bandwidth']),
+                clr_fg_white + str(members[1]['results'][interface]['rx_bandwidth']),
+                clr_fg_white + str(members[1]['results'][interface]['tx_bytes']),
+                clr_fg_white + str(members[1]['results'][interface]['rx_bytes'])
             ])
 
-			if 'child_intfs' in members['results'][interface]:
-				for child in members['results'][interface]['child_intfs'].keys():
-					if members['results'][interface]['child_intfs'][child]['link'] != 'down':
+			if 'child_intfs' in members[1]['results'][interface]:
+				for child in members[1]['results'][interface]['child_intfs'].keys():
+					if members[1]['results'][interface]['child_intfs'][child]['link'] != 'down':
 						color_l = clr_fg_green
 					else:
 						color_l = clr_fg_red
 					table.append([
 						clr_fg_yellow + child,
 						color_l + members['results'][interface]['child_intfs'][child]['link'],
-						clr_fg_white + str(members['results'][interface]['child_intfs'][child]['session']),
-						clr_fg_white + str(members['results'][interface]['child_intfs'][child]['tx_bandwidth']),
-						clr_fg_white + str(members['results'][interface]['child_intfs'][child]['rx_bandwidth']),
-						clr_fg_white + str(members['results'][interface]['child_intfs'][child]['tx_bytes']),
-						clr_fg_white + str(members['results'][interface]['child_intfs'][child]['rx_bytes'])
+						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['session']),
+						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['tx_bandwidth']),
+						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['rx_bandwidth']),
+						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['tx_bytes']),
+						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['rx_bytes'])
 					])
 		    
 		print(tabulate(table, headers, numalign="right"))
 
-		for health in members1['results'].keys():
+		for health in members1[1]['results'].keys():
 			print (clr_bg_yellow + "\nSD-WAN health-check: " + health, end=' ')
 			if health_check[health]['detect-mode'] != 'remote':
 				print (clr_bg_blu + ' Server:', health_check[health]['server'], '- Protocol:', health_check[health]['protocol'] )
@@ -182,51 +170,51 @@ try:
 
 			table = []
 			headers = [clr_fg_blue + "name","status","sla_targets_met", "latency","jitter","packet_loss","packet_sent","packet_received","session","tx_bandwidth","rx_bandwidth"]
-			for port in members1['results'][health].keys():
-				if members1['results'][health][port]['status'] == "error":
+			for port in members1[1]['results'][health].keys():
+				if members1[1]['results'][health][port]['status'] == "error":
 					pass
-				elif members1['results'][health][port]['status'] == "down":
+				elif members1[1]['results'][health][port]['status'] == "down":
 					table.append([
                         clr_fg_yellow + port,
-                        clr_fg_red + members1['results'][health][port]['status'] ])    
+                        clr_fg_red + members1[1]['results'][health][port]['status'] ])    
 				else :
-					if members1['results'][health][port]['packet_loss'] == 0:
+					if members1[1]['results'][health][port]['packet_loss'] == 0:
 						color_p = clr_fg_white
 					else: 
 						color_p = clr_fg_red
 
 					table.append([
                         clr_fg_yellow + port,
-                        clr_fg_green + members1['results'][health][port]['status'],
-                        clr_fg_white + str(members1['results'][health][port]['sla_targets_met']),
-                        clr_fg_white + str(round(members1['results'][health][port]['latency'],3)),
-                        clr_fg_white + str(round(members1['results'][health][port]['jitter'],3)),
-                        color_p + str(members1['results'][health][port]['packet_loss']) ,
-                        clr_fg_white + str(members1['results'][health][port]['packet_sent']),
-                        clr_fg_white + str(members1['results'][health][port]['packet_received']),
-                        clr_fg_white + str(members1['results'][health][port]['session']),
-                        clr_fg_white + str(members1['results'][health][port]['tx_bandwidth']),
-                        clr_fg_white + str(members1['results'][health][port]['rx_bandwidth'])
+                        clr_fg_green + members1[1]['results'][health][port]['status'],
+                        clr_fg_white + str(members1[1]['results'][health][port]['sla_targets_met']),
+                        clr_fg_white + str(round(members1[1]['results'][health][port]['latency'],3)),
+                        clr_fg_white + str(round(members1[1]['results'][health][port]['jitter'],3)),
+                        color_p + str(members1[1]['results'][health][port]['packet_loss']) ,
+                        clr_fg_white + str(members1[1]['results'][health][port]['packet_sent']),
+                        clr_fg_white + str(members1[1]['results'][health][port]['packet_received']),
+                        clr_fg_white + str(members1[1]['results'][health][port]['session']),
+                        clr_fg_white + str(members1[1]['results'][health][port]['tx_bandwidth']),
+                        clr_fg_white + str(members1[1]['results'][health][port]['rx_bandwidth'])
                     ])
 
-					if 'child_intfs' in members1['results'][health][port]:
-						for child in members1['results'][health][port]['child_intfs'].keys():
-							if members1['results'][health][port]['child_intfs'][child]['packet_loss'] == 0:
+					if 'child_intfs' in members1[1]['results'][health][port]:
+						for child in members1[1]['results'][health][port]['child_intfs'].keys():
+							if members1[1]['results'][health][port]['child_intfs'][child]['packet_loss'] == 0:
 								color_p = clr_fg_white
 							else: 
 								color_p = clr_fg_red
 							table.append([
 								clr_fg_yellow + child,
-								clr_fg_green + members1['results'][health][port]['status'],
-                        		clr_fg_white + str(members1['results'][health][port]['child_intfs'][child]['sla_targets_met']),
-                        		clr_fg_white + str(round(members1['results'][health][port]['child_intfs'][child]['latency'],3)),
-								clr_fg_white + str(round(members1['results'][health][port]['child_intfs'][child]['jitter'],3)),
-								color_p + str(members1['results'][health][port]['child_intfs'][child]['packet_loss']) ,
-								clr_fg_white + str(members1['results'][health][port]['child_intfs'][child]['packet_sent']),
-								clr_fg_white + str(members1['results'][health][port]['child_intfs'][child]['packet_received']),
-								clr_fg_white + str(members1['results'][health][port]['child_intfs'][child]['session']),
-								clr_fg_white + str(members1['results'][health][port]['child_intfs'][child]['tx_bandwidth']),
-								clr_fg_white + str(members1['results'][health][port]['child_intfs'][child]['rx_bandwidth'])
+								clr_fg_green + members1[1]['results'][health][port]['status'],
+                        		clr_fg_white + str(members1[1]['results'][health][port]['child_intfs'][child]['sla_targets_met']),
+                        		clr_fg_white + str(round(members1[1]['results'][health][port]['child_intfs'][child]['latency'],3)),
+								clr_fg_white + str(round(members1[1]['results'][health][port]['child_intfs'][child]['jitter'],3)),
+								color_p + str(members1[1]['results'][health][port]['child_intfs'][child]['packet_loss']) ,
+								clr_fg_white + str(members1[1]['results'][health][port]['child_intfs'][child]['packet_sent']),
+								clr_fg_white + str(members1[1]['results'][health][port]['child_intfs'][child]['packet_received']),
+								clr_fg_white + str(members1[1]['results'][health][port]['child_intfs'][child]['session']),
+								clr_fg_white + str(members1[1]['results'][health][port]['child_intfs'][child]['tx_bandwidth']),
+								clr_fg_white + str(members1[1]['results'][health][port]['child_intfs'][child]['rx_bandwidth'])
 							])
 
 
@@ -246,24 +234,22 @@ try:
 
 		time.sleep(2)
 
+except fortigate.FGTValidSessionException as identifier:
+    print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
+
+except fortigate.FGTBaseException as identifier:
+	print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
+
 except TypeError as identifier:
     print ('%sError: %s%s' % (clr_bg_red, identifier, clr_reset))
     
 except KeyboardInterrupt:
-	print ('%sMonitor sd-wan to %s terminated%s' % (clr_bg_red, ipfirewall, clr_reset))
-
-except KeyError:
-	print ('%sInvalid data format %s' % (clr_bg_red, clr_reset))
+	print ('%sInterrupt by user %s' % (clr_bg_yellow, clr_reset))
 	
-except json.decoder.JSONDecodeError: 
-	print ('%sLogin failed to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
-
 except (requests.exceptions.ConnectionError, OSError):
-	print('%sFailed to establish a connection to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
+	print ('%sFailed to establish a connection to %s%s' % (clr_bg_red, ipfirewall, clr_reset))
 
 finally:
-	#print 'Finally close client'
-	fgt.logout()
 	print("Exit")
 	
 	

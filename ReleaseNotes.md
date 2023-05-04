@@ -1,6 +1,11 @@
 # **Monitor_ftnt**
+#### Script Python for Fortinet device monitoring
+## **v1.2.0 (May, 5, 2023)**
+### Changelog:
+- New library FortiManager JSON-RPC (*pyFMG*) and FortiGate REST (*pyFGT*).  
+- Add firewall IP address in *monitor_fmg_ts.py* and *monitor_fmg_sdwan.py*
+***
 ## **v1.0.1 (April, 28, 2023)**
-Script Python for Fortinet device monitoring
 
 ### New Features:
 - No new.  
@@ -15,7 +20,6 @@ Script Python for Fortinet device monitoring
 ***
 
 ## **v1.0.0 (April, 14, 2023)**
-Script Python for Fortinet device monitoring
 
 ### New Features:
 - First release.  

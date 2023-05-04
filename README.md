@@ -79,12 +79,11 @@ Usage:
 
 ## **Pre-requisites**  
 - Python 3.9.6+ with this packages:
-    - requests (https://pypi.org/project/setuptools/)
-    - lxml (https://pypi.org/project/lxml/)
-    - setuptools (https://pypi.org/project/setuptools/)
-    - suds (https://pypi.org/project/suds/)
-    - tabulate (https://pypi.org/project/tabulate/)
-- FTNTLIB Python Module 0.4.0.dev18 (https://fndn.fortinet.net/index.php?/tools/file/4-ftntlib-python-module/)
+    - requests (https://pypi.org/project/requests/)
+    - setuptools (https://pypi.org/project/setuptools/): Easily download, build, install, upgrade, and uninstall Python packages
+    - tabulate (https://pypi.org/project/tabulate/): Pretty-print tabular data
+    - pyFMG (https://pypi.org/project/pyfmg/): Represents the base components of the Fortinet FortiManager JSON-RPC interface
+    - pyFGT (https://pypi.org/project/pyfgt/): Represents the base components of the Fortinet FortiGate REST interface with abstractions
 
 Notice: all the scripts use the python3 interpeter in */usr/bin/* directory. Please, change the path if your python3 is in other one.
 

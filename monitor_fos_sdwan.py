@@ -149,9 +149,10 @@ try:
 						color_l = clr_fg_green
 					else:
 						color_l = clr_fg_red
+					# print(members[1]['results'][interface]['child_intfs'][child]['tx_bandwidth'])
 					table.append([
 						clr_fg_yellow + child,
-						color_l + members['results'][interface]['child_intfs'][child]['link'],
+						color_l + members[1]['results'][interface]['child_intfs'][child]['link'],
 						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['session']),
 						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['tx_bandwidth']),
 						clr_fg_white + str(members[1]['results'][interface]['child_intfs'][child]['rx_bandwidth']),

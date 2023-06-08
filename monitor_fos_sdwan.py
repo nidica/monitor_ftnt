@@ -109,6 +109,10 @@ try:
 		table = []
 		table_members =[]
 		print ('%sTime : %s\033[0m  %sHostname: %s (%s) IP: %s Version %s build%s\n' % (clr_bg_red, time.ctime(), clr_bg_yellow, hostname, serial, ipfirewall, version, build))
+		
+		#******************
+        #* SD-WAN members #
+        #******************
 		print (clr_bg_yellow + "SD-WAN members")
 		headers_member = [clr_fg_blue + 'name', 'seq', 'zone', 'gateway', 'source', 'cost', 'weight', 'priority']
 		for members_sdwan in zone_sdwan.keys():
@@ -124,6 +128,9 @@ try:
 			])
 		print(tabulate(table_members, headers_member, numalign="right"))	
 		
+		#******************
+        #* SD-WAN traffic #
+        #******************
 		print (clr_bg_yellow + "\nSD-WAN traffic")
 		
 		headers = [clr_fg_blue + 'name', 'link', 'session', 'tx_bandwidth(bps)', 'rx_bandwidth(bps)', 'tx_bytes', 'rx_bytes']
@@ -162,6 +169,9 @@ try:
 		    
 		print(tabulate(table, headers, numalign="right"))
 
+		#***********************
+        #* SD-WAN health-check #
+        #***********************
 		for health in members1[1]['results'].keys():
 			print (clr_bg_yellow + "\nSD-WAN health-check: " + health, end=' ')
 			if health_check[health]['detect-mode'] != 'remote':

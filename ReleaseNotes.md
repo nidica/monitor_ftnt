@@ -1,9 +1,14 @@
 # **Monitor_ftnt**
 #### Script Python for Fortinet device monitoring
+## **v1.2.2 (May, 31, 2023)**
+### Changelog:
+- Change view in *monitor_fmg_sdwan.py* script: SD-WAN members with seq, zone, gateway, source, cost, weight, priority
+- Add shurtcut tunnel in SD-WAN health-check in *monitor_fmg_sdwan.py* script
+***
 ## **v1.2.1 (May, 30, 2023)**
 ### Bugfixes:
 - #0002 - Fixed a bug in the display of shortcut tunnels in the *monitor_fos_sdwan.py* script.
-
+***
 ## **v1.2.0 (May, 5, 2023)**
 ### Changelog:
 - New library FortiManager JSON-RPC (*pyFMG*) and FortiGate REST (*pyFGT*).  
@@ -30,4 +35,4 @@
 ### Changelog:
 - No change.
 ### Bugfixes:
-- No bugfix.
+- No bugfix
